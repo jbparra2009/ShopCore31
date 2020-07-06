@@ -2,6 +2,7 @@
 using ShopCore31.Domain.Infrastructure;
 using ShopCore31.Domain.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -16,7 +17,30 @@ namespace ShopCore31.Database
                 _ctx = ctx;
             }
 
-            public bool EnoughStock(int stockId, int qty)
+        public Task<int> CreateStock(Stock stock)
+        {
+            _ctx.Stock.Add(stock);
+
+            return _ctx.SaveChangesAsync();
+        }
+
+        public Task<int> DeleteStock(int id)
+        {
+
+            var stock = _ctx.Stock.FirstOrDefault(x => x.Id == id);
+            _ctx.Stock.Remove(stock);
+
+            return _ctx.SaveChangesAsync();
+        }
+
+        public Task<int> UpdateStockRange(List<Stock> stockList)
+        {
+            _ctx.Stock.UpdateRange(stockList);
+
+            return _ctx.SaveChangesAsync();
+        }
+
+        public bool EnoughStock(int stockId, int qty)
             {
                 return _ctx.Stock.FirstOrDefault(x => x.Id == stockId).Qty >= qty;
             }
@@ -71,22 +95,61 @@ namespace ShopCore31.Database
                 return _ctx.SaveChangesAsync();
             }
 
-            public Task RemoveStockFromHold(int stockId, int qty, string sessionId)
+        public Task RemoveStockFromHold(string sessionId)
+        {
+            var stockOnHold = _ctx.StocksOnHold
+                .Where(x => x.SessionId == sessionId)
+                .ToList();
+
+            _ctx.StocksOnHold.RemoveRange(stockOnHold);
+
+            return _ctx.SaveChangesAsync();
+        }
+
+        public Task RemoveStockFromHold(int stockId, int qty, string sessionId)
+        {
+
+            var stockOnHold = _ctx.StocksOnHold
+                .FirstOrDefault(x => x.StockId == stockId
+                && x.SessionId == sessionId);
+
+            var stock = _ctx.Stock.FirstOrDefault(x => x.Id == stockId);
+            stock.Qty += qty;
+            stockOnHold.Qty -= qty;
+
+            if (stockOnHold.Qty <= 0)
             {
-                var stockOnHold = _ctx.StocksOnHold
-                    .FirstOrDefault(x => x.StockId == stockId
-                    && x.SessionId == sessionId);
+                _ctx.Remove(stockOnHold);
+            }
 
-                var stock = _ctx.Stock.FirstOrDefault(x => x.Id == stockId);
-                stock.Qty += qty;
-                stockOnHold.Qty -= qty;
+            return _ctx.SaveChangesAsync();
+        }
 
-                if (stockOnHold.Qty <= 0)
+        public Task RetrieveExpiredStockOnHold()
+        {
+            var stocksOnHold = _ctx.StocksOnHold
+                .Where(x => x.ExpiryDate < DateTime.Now)
+                .ToList();
+
+            if (stocksOnHold.Count > 0)
+            {
+                var stockToReturn = _ctx.Stock.AsEnumerable()
+                    .Where(x => stocksOnHold.Any(y => y.StockId == x.Id))
+                    .ToList();
+
+                foreach (var stock in stockToReturn)
                 {
-                    _ctx.Remove(stockOnHold);
+                    stock.Qty = stock.Qty + stocksOnHold.FirstOrDefault(x => x.StockId == stock.Id).Qty;
                 }
+
+                _ctx.StocksOnHold.RemoveRange(stocksOnHold);
 
                 return _ctx.SaveChangesAsync();
             }
+
+            return Task.CompletedTask;
         }
+
+        
+    }
 }

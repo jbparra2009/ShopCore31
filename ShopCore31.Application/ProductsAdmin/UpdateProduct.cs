@@ -1,27 +1,28 @@
-﻿using ShopCore31.Database;
-using System.Linq;
+﻿using ShopCore31.Domain.Infrastructure;
 using System.Threading.Tasks;
 
 namespace ShopCore31.Application.ProductsAdmin
 {
+    [Service]
     public class UpdateProduct
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IProductManager _productManager;
 
-        public UpdateProduct(ApplicationDbContext context)
+        public UpdateProduct(IProductManager productManager)
         {
-            _context = context;
+            _productManager = productManager;
         }
 
         public async Task<Response> Do(Request request)
         {
-            var product = _context.Products.FirstOrDefault(x => x.Id == request.Id);
+            var product = _productManager.GetProductById(request.Id, x => x);
 
             product.Name = request.Name;
             product.Description = request.Description;
             product.Value = request.Value;
 
-            await _context.SaveChangesAsync();
+            await _productManager.UpdateProduct(product);
+
             return new Response
             {
                 Id = product.Id,

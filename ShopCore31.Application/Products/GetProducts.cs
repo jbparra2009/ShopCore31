@@ -1,34 +1,28 @@
-﻿using Microsoft.EntityFrameworkCore;
-using ShopCore31.Database;
-using System;
+﻿using ShopCore31.Domain.Infrastructure;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ShopCore31.Application.Products
 {
+    [Service]
     public class GetProducts
     {
-        private readonly ApplicationDbContext _ctx;
+        private readonly IProductManager _productManager;
 
-        public GetProducts(ApplicationDbContext ctx)
+        public GetProducts(IProductManager productManager)
         {
-            _ctx = ctx;
+            _productManager = productManager;
         }
 
         public IEnumerable<ProductViewModel> Do() =>
-            _ctx.Products
-                .Include(x => x.Stock).AsEnumerable()
-                .Select(x => new ProductViewModel
-                {
-                    Name = x.Name,
-                    Description = x.Description,
-                    Value = $"${x.Value.ToString("N2")}", // 1100.50 => 1,100.50 => $ 1,100.50
+            _productManager.GetProductsWithStock(x => new ProductViewModel
+            {
+                Name = x.Name,
+                Description = x.Description,
+                Value = x.Value.GetValueString(),
 
-                    StockCount = x.Stock.Sum(y => y.Qty)
-                })
-                .ToList();
-
+                StockCount = x.Stock.Sum(y => y.Qty)
+            });
 
         public class ProductViewModel
         {

@@ -1,15 +1,23 @@
 ﻿using ShopCore31.Domain.Models;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace ShopCore31.Domain.Infrastructure
 {
-        // Episode 38 - Refactoring Cart and Database
-        public interface IStockManager
-        {
-            Stock GetStockWithProduct(int stockId);
-            bool EnoughStock(int stockId, int qty);
-            Task PutStockOnHold(int stockId, int qty, string sessionId);
-            Task RemoveStockFromHold(int stockId, int qty, string sessionId);
-        }
+    // Episode 38 & 39 - Refactoring Cart and Database
+    public interface IStockManager
+    {
+        Task<int> CreateStock(Stock stock);
+        Task<int> DeleteStock(int id);
+        Task<int> UpdateStockRange(List<Stock> stockList);
+
+        Stock GetStockWithProduct(int stockId);
+        bool EnoughStock(int stockId, int qty);
+        Task PutStockOnHold(int stockId, int qty, string sessionId);
+
+        Task RemoveStockFromHold(string sessionId);
+        Task RemoveStockFromHold(int stockId, int qty, string sessionId);
+        Task RetrieveExpiredStockOnHold();
+    }
 
 }

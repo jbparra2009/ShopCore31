@@ -1,9 +1,9 @@
 ﻿using ShopCore31.Domain.Infrastructure;
 using ShopCore31.Domain.Models;
-using System.ComponentModel.DataAnnotations;
 
 namespace ShopCore31.Application.Cart
 {
+    [Service]
     public class AddCustomerInformation
     {
         private readonly ISessionManager _sessionManager;
@@ -15,23 +15,14 @@ namespace ShopCore31.Application.Cart
 
         public class Request
         {
-            [Required]
             public string FirstName { get; set; }
-            [Required]
             public string LastName { get; set; }
-            [Required]
-            [DataType(DataType.EmailAddress)]
             public string Email { get; set; }
-            [Required]
-            [DataType(DataType.PhoneNumber)]
             public string PhoneNumber { get; set; }
 
-            [Required]
             public string Address1 { get; set; }
             public string Address2 { get; set; }
-            [Required]
             public string City { get; set; }
-            [Required]
             public string ZipCode { get; set; }
         }
 

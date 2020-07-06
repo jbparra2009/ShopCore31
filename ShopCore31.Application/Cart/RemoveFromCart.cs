@@ -1,10 +1,9 @@
-﻿using ShopCore31.Database;
-using ShopCore31.Domain.Infrastructure;
-using System.Linq;
+﻿using ShopCore31.Domain.Infrastructure;
 using System.Threading.Tasks;
 
 namespace ShopCore31.Application.Cart
 {
+    [Service]
     public class RemoveFromCart
     {
         private readonly ISessionManager _sessionManager;

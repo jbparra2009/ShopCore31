@@ -1,24 +1,21 @@
-﻿using ShopCore31.Database;
-using System.Linq;
+﻿using ShopCore31.Domain.Infrastructure;
 using System.Threading.Tasks;
 
 namespace ShopCore31.Application.ProductsAdmin
 {
+    [Service]
     public class DeleteProduct
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IProductManager _productManager;
 
-        public DeleteProduct(ApplicationDbContext context)
+        public DeleteProduct(IProductManager productManager)
         {
-            _context = context;
+            _productManager = productManager;
         }
 
-        public async Task<bool> Do(int id)
-        {
-            var Product = _context.Products.FirstOrDefault(x => x.Id == id);
-            _context.Products.Remove(Product);
-            await _context.SaveChangesAsync();
-            return true;
+        public Task<int> Do(int id)
+        {            
+            return _productManager.DeleteProduct(id);
         }
     }
 }

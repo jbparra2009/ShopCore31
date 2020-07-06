@@ -1,20 +1,22 @@
-﻿using ShopCore31.Database;
+﻿using ShopCore31.Domain.Infrastructure;
 using ShopCore31.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace ShopCore31.Application.Orders
 {
+    [Service]
     public class CreateOrder
     {
-        private readonly ApplicationDbContext _ctx;
+        private readonly IOrderManager _orderManager;
+        private readonly IStockManager _stockManager;
 
-        public CreateOrder(ApplicationDbContext ctx)
+        public CreateOrder(IOrderManager orderManager, IStockManager stockManager)
         {
-            _ctx = ctx;
+            _orderManager = orderManager;
+            _stockManager = stockManager;
         }
 
         public class Request
@@ -44,13 +46,6 @@ namespace ShopCore31.Application.Orders
 
         public async Task<bool> Do(Request request)
         {
-
-            var stockOnHold = _ctx.StocksOnHold
-                .Where(x => x.SessionId == request.SessionId)
-                .ToList();
-
-            _ctx.StocksOnHold.RemoveRange(stockOnHold);
-
             var order = new Order
             {
                 OrderRef = CreateOrderReference(),
@@ -72,9 +67,16 @@ namespace ShopCore31.Application.Orders
                 }).ToList()
             };
 
-            _ctx.Orders.Add(order);
+            var success = await _orderManager.CreateOrder(order) > 0;
 
-            return await _ctx.SaveChangesAsync() > 0;
+            if (success)
+            {
+                await _stockManager.RemoveStockFromHold(request.SessionId);
+                
+                return true;
+            }
+
+            return false;
         }
 
         public string CreateOrderReference()
@@ -87,7 +89,7 @@ namespace ShopCore31.Application.Orders
             {
                 for (int i = 0; i < result.Length; i++)
                     result[i] = chars[random.Next(chars.Length)];
-            } while (_ctx.Orders.Any(x => x.OrderRef == new string(result)));
+            } while (_orderManager.OrderReferenceExists(new string(result)));
 
             return new string(result);
         }

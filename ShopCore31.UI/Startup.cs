@@ -1,15 +1,19 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using ShopCore31.Database;
 using Stripe;
 using System;
 using ShopCore31.UI.Infrastructure;
 using ShopCore31.Domain.Infrastructure;
+using ShopCore31.Database;
+using Microsoft.EntityFrameworkCore;
+using FluentValidation.AspNetCore;
+using FluentValidation;
+using ShopCore31.UI.ValidationContexts;
+using ShopCore31.Application.Cart;
 
 namespace ShopCore31.UI
 {
@@ -22,14 +26,12 @@ namespace ShopCore31.UI
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddHttpContextAccessor();
 
             services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(Configuration["DefaultConnection"]));
 
-            // AddIdentity registers the services
             services.AddIdentity<IdentityUser, IdentityRole>(config =>
             {
                 config.Password.RequiredLength = 6;
@@ -61,7 +63,10 @@ namespace ShopCore31.UI
                 {
                     config.Conventions.AuthorizeFolder("/Admin");
                     config.Conventions.AuthorizePage("/Admin/ConfigureUsers", "Admin");
-                });
+                })
+                .AddFluentValidation(x => x.RegisterValidatorsFromAssembly(typeof(Startup).Assembly));
+
+            //services.AddTransient<IValidator<AddCustomerInformation.Request>, AddCustomerInformationRequestValidation>();
 
             services.AddSession(options =>
             {
@@ -69,13 +74,7 @@ namespace ShopCore31.UI
                 options.Cookie.MaxAge = TimeSpan.FromMinutes(20);
             });
 
-            services.AddTransient<IStockManager, StockManager>();
-            services.AddScoped<ISessionManager, SessionManager>();
-
-            //Stripe Adds
             StripeConfiguration.ApiKey = Configuration.GetSection("Stripe")["SecretKey"];
-
-            //services.AddTransient<CreateUser>();
 
             services.AddApplicationServices();
 

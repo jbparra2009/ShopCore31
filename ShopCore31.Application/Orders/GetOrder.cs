@@ -1,20 +1,19 @@
-﻿using Microsoft.EntityFrameworkCore;
-using ShopCore31.Database;
+﻿using ShopCore31.Domain.Infrastructure;
+using ShopCore31.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ShopCore31.Application.Orders
 {
+    [Service]
     public class GetOrder
     {
-        private readonly ApplicationDbContext _ctx;
+        private readonly IOrderManager _orderManager;
 
-        public GetOrder(ApplicationDbContext ctx)
+        public GetOrder(IOrderManager orderManager)
         {
-            _ctx = ctx;
+            _orderManager = orderManager;
         }
 
         public class Response
@@ -46,36 +45,34 @@ namespace ShopCore31.Application.Orders
         }
 
         public Response Do(string reference) =>
-            _ctx.Orders
-                .Where(x => x.OrderRef == reference)
-                .Include(x => x.OrderStocks)
-                .ThenInclude(x => x.Stock)
-                .ThenInclude(x => x.Product)
-                .Select(x => new Response
+            _orderManager.GetOrderByReference(reference, Projection);
+
+        private static readonly Func<Order, Response> Projection = (order) =>
+            new Response
+            {
+                OrderRef = order.OrderRef,
+
+                FirstName = order.FirstName,
+                LastName = order.LastName,
+                Email = order.Email,
+                PhoneNumber = order.PhoneNumber,
+                Address1 = order.Address1,
+                Address2 = order.Address2,
+                City = order.City,
+                ZipCode = order.ZipCode,
+
+                Products = order.OrderStocks.Select(y => new Product
                 {
-                    OrderRef = x.OrderRef,
+                    Name = y.Stock.Product.Name,
+                    Description = y.Stock.Product.Description,
+                    Value = $"${y.Stock.Product.Value:N2}", // 1100.50 => 1,100.50 => $ 1,100.50
+                    Qty = y.Qty,
+                    StockDescription = y.Stock.Description,
+                }),
 
-                    FirstName = x.FirstName,
-                    LastName = x.LastName,
-                    Email = x.Email,
-                    PhoneNumber = x.PhoneNumber,
-                    Address1 = x.Address1,
-                    Address2 = x.Address2,
-                    City = x.City,
-                    ZipCode = x.ZipCode,
-
-                    Products = x.OrderStocks.Select(y => new Product
-                    {
-                        Name = y.Stock.Product.Name,
-                        Description = y.Stock.Product.Description,
-                        Value = $"${y.Stock.Product.Value:N2}", // 1100.50 => 1,100.50 => $ 1,100.50
-                        Qty = y.Qty,
-                        StockDescription = y.Stock.Description,
-                    }),
-
-                    TotalValue = x.OrderStocks.Sum(y => y.Stock.Product.Value).ToString("N2")
-
-                })
-                .FirstOrDefault();
+                TotalValue = order.OrderStocks.Sum(y => y.Stock.Product.Value).ToString("N2")
+            };
     }
 }
+
+

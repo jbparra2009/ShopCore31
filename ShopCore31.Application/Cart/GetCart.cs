@@ -1,11 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
-using ShopCore31.Database;
-using ShopCore31.Domain.Infrastructure;
+﻿using ShopCore31.Domain.Infrastructure;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace ShopCore31.Application.Cart
 {
+    [Service]
     public class GetCart
     {
         private readonly ISessionManager _sessionManager;

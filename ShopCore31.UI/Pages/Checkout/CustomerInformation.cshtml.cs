@@ -1,20 +1,17 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Hosting;
 using ShopCore31.Application.Cart;
-using ShopCore31.Database;
 
 namespace ShopCore31.UI.Pages.Checkout
 {
     public class CustomerInformationModel : PageModel
     {
-        private readonly IHostingEnvironment _env;
+        private readonly IWebHostEnvironment _env;
+        //private readonly IHostingEnvironment _env;
 
-        public CustomerInformationModel(IHostingEnvironment env)
+        public CustomerInformationModel(IWebHostEnvironment env)
         {
             _env = env;
         }

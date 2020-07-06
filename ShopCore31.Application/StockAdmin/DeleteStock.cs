@@ -1,25 +1,21 @@
-﻿using ShopCore31.Database;
-using System.Linq;
+﻿using ShopCore31.Domain.Infrastructure;
 using System.Threading.Tasks;
 
 namespace ShopCore31.Application.StockAdmin
 {
+    [Service]
     public class DeleteStock
     {
-        private readonly ApplicationDbContext _ctx;
+        private readonly IStockManager _stockManager;
 
-        public DeleteStock(ApplicationDbContext ctx)
+        public DeleteStock(IStockManager stockManager)
         {
-            _ctx = ctx;
+            _stockManager = stockManager;
         }
 
-        public async Task<bool> Do(int id)
+        public Task<int> Do(int id)
         {
-            var stock = _ctx.Stock.FirstOrDefault(x => x.Id == id);
-            _ctx.Stock.Remove(stock);
-
-            await _ctx.SaveChangesAsync();
-            return true;
+            return _stockManager.DeleteStock(id);
         }
     }
 }

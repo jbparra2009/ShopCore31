@@ -1,28 +1,27 @@
-﻿using ShopCore31.Database;
+﻿using ShopCore31.Domain.Infrastructure;
 using ShopCore31.Domain.Models;
-using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace ShopCore31.Application.StockAdmin
 {
+    [Service]
     public class UpdateStock
     {
-        private readonly ApplicationDbContext _ctx;
+        private readonly IStockManager _stockManager;
 
-        public UpdateStock(ApplicationDbContext ctx)
+        public UpdateStock(IStockManager stockManager)
         {
-            _ctx = ctx;
+            _stockManager = stockManager;
         }
 
         public async Task<Response> Do(Request request)
         {
-            var stocks = new List<Stock>();
+            var stockList = new List<Stock>();
 
             foreach (var stock in request.Stock)
             {
-                stocks.Add(new Stock
+                stockList.Add(new Stock
                 {
                     Id = stock.Id,
                     Description = stock.Description,
@@ -31,9 +30,7 @@ namespace ShopCore31.Application.StockAdmin
                 });
             }
 
-            _ctx.Stock.UpdateRange(stocks);
-
-            await _ctx.SaveChangesAsync();
+            await _stockManager.UpdateStockRange(stockList);
 
             return new Response
             {

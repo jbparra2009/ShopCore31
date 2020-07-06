@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
 using ShopCore31.Application.Cart;
 using ShopCore31.Application.Orders;
-using ShopCore31.Database;
+using ShopCore31.Domain.Infrastructure;
 using Stripe;
 using GetOrderCart = ShopCore31.Application.Cart.GetOrder;
 
@@ -14,12 +14,10 @@ namespace ShopCore31.UI.Pages.Checkout
     public class PaymentModel : PageModel
     {
         public string PublicKey { get; }
-        private readonly ApplicationDbContext _ctx;
 
-        public PaymentModel(IConfiguration config, ApplicationDbContext ctx)
+        public PaymentModel(IConfiguration config)
         {
             PublicKey = config["Stripe:PublicKey"].ToString();
-            _ctx = ctx;
         }
 
         public IActionResult OnGet(
@@ -38,7 +36,9 @@ namespace ShopCore31.UI.Pages.Checkout
         public async Task<IActionResult> OnPost(
             string stripeEmail,
             string stripeToken,
-            [FromServices] GetOrderCart getOrder)
+            [FromServices] GetOrderCart getOrder,
+            [FromServices] CreateOrder createOrder,
+            [FromServices] ISessionManager sessionManager)
         {
             var customers = new CustomerService();
             var charges = new ChargeService();
@@ -63,7 +63,7 @@ namespace ShopCore31.UI.Pages.Checkout
             var sessionId = HttpContext.Session.Id;
 
             // Create an Order
-            await new CreateOrder(_ctx).Do(new CreateOrder.Request
+            await createOrder.Do(new CreateOrder.Request
             {
                 StripeReference = charge.Id,
                 SessionId = sessionId,
@@ -83,6 +83,8 @@ namespace ShopCore31.UI.Pages.Checkout
                     Qty = x.Qty
                 }).ToList()
             });
+
+            sessionManager.ClearCart();
 
             return RedirectToPage("/Index");
         }

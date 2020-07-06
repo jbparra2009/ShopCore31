@@ -1,20 +1,20 @@
-﻿using ShopCore31.Database;
+﻿using ShopCore31.Domain.Infrastructure;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace ShopCore31.Application.ProductsAdmin
 {
+    [Service]
     public class GetProducts
     {
-        private readonly ApplicationDbContext _ctx;
+        private readonly IProductManager _productManager;
 
-        public GetProducts(ApplicationDbContext ctx)
+        public GetProducts(IProductManager productManager)
         {
-            _ctx = ctx;
+            _productManager = productManager;
         }
 
         public IEnumerable<ProductViewModel> Do() =>
-            _ctx.Products.ToList().Select(x => new ProductViewModel
+            _productManager.GetProductsWithStock(x => new ProductViewModel
             {
                 Id = x.Id,
                 Name = x.Name,

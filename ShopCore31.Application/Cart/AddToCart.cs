@@ -1,10 +1,10 @@
-﻿using ShopCore31.Database;
-using ShopCore31.Domain.Infrastructure;
+﻿using ShopCore31.Domain.Infrastructure;
 using ShopCore31.Domain.Models;
 using System.Threading.Tasks;
 
 namespace ShopCore31.Application.Cart
 {
+    [Service]
     public class AddToCart
     {
         private readonly ISessionManager _sessionManager;

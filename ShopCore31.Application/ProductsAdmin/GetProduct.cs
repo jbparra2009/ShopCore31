@@ -1,26 +1,25 @@
-﻿using ShopCore31.Database;
-using System.Linq;
+﻿using ShopCore31.Domain.Infrastructure;
 
 namespace ShopCore31.Application.ProductsAdmin
 {
+    [Service]
     public class GetProduct
     {
-        private readonly ApplicationDbContext _ctx;
+        private readonly IProductManager _productManager;
 
-        public GetProduct(ApplicationDbContext ctx)
+        public GetProduct(IProductManager productManager)
         {
-            _ctx = ctx;
+            _productManager = productManager;
         }
 
         public ProductViewModel Do(int id) =>
-            _ctx.Products.Where(x => x.Id == id).Select(x => new ProductViewModel
+            _productManager.GetProductById(id, x => new ProductViewModel
             {
                 Id = x.Id,
                 Name = x.Name,
                 Description = x.Description,
                 Value = x.Value,
-            })
-            .FirstOrDefault();
+            });
 
         public class ProductViewModel
         {
